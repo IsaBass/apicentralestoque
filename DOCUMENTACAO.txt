@@ -1,0 +1,227 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>  endpoint /geretoken   <<<< NÃO autenticada     <<<<<<<<<<<<<<<<<<<<>>>>>>
+
+.post() .get() .put()
+--- retorna o token  qtd horas = 10 horas
+
+-parametros necessarios:
+> PJCENTRAL : header, body
+> CCHAVE : header, body
+
+- interna:
+> valida na base CNPJS
+
+- retorna:
+> erro 401 : message , { erro }
+> OK 200: token , expireDate (tipo inteiro)
+
+>>>>>>>>>>>>>>>  FIM endpoint /geretoken      <<<<<<<<<<<<<<<<<<<<>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>  ROTA /limbo   <<<< SIM autenticada     <<<<<<<<<<<<<<<<<<<<>>>>>>
+
+************************
+.get('/')
+--- teste de parametros e token
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> PJLOJA : header, body
+
+- interna:
+> verifica PJCENTRAL (direto no token)
+> valida PJLOJA nas filiais do token
+
+- retorna:
+> erro 400 : message
+> OK 200: message , dataToken
+
+************************
+************************
+.delete('/loja')
+--- EXCLUI o limbo da loja, após ser pego pelo delphi
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> PJLOJA : header, body
+
+- interna:
+> valida PJLOJA nas filiais do token
+
+- retorna:
+> erro 400 : message
+> OK 200: apenas status
+
+************************
+************************
+.post('/loja')
+--- COLETA o limbo da loja, em situacao PEND
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> PJLOJA : header, body
+
+- interna:
+> valida PJLOJA nas filiais do token
+
+- retorna:
+> erro 400 : message
+> OK 204 : message: 'sem dados'
+> OK 200: LISTA com registros de limbo , adicionado do doc.id
+
+************************
+
+
+>>>>>>>>>>>>>>>  FIM ROTA LIMBO     <<<<<<<<<<<<<<<<<<<<>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>  ROTA /loja   <<<< SIM autenticada     <<<<<<<<<<<<<<<<<<<<>>>>>>
+
+************************
+.get('/')
+--- teste da rota 
+************************
+
+************************
+.get('/pedido/:idPedido')
+---  COLETA UNICO  PEDIDO INTEIRO 
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> PJLOJA : header, body
+> idPedido : PARAMS
+
+- interna:
+> pega PJCENTRAL (direto no token)
+> valida PJLOJA nas filiais do token
+> get Pedido com doc = PJLOJA + idPedido
+
+- retorna:
+> erro 400 : message
+> OK 204 : message: 'sem dados'
+> OK 200: json do pedido
+
+************************
+***********************
+.post('/pedido')
+--- GRAVA PEDIDO -- GRAVA JSON INTEIRO -- SUBSTITUI TUDO
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> PJLOJA : header, body
+> CodPedido : body
+
+- interna:
+> pega PJCENTRAL (direto no token)
+> valida PJLOJA nas filiais do token
+> grava Pedido com .set 
+,  doc = PJLOJA + CodPedido
+
+- retorna:
+> erro 400 : message , { erro }
+> OK 200: apenas status
+
+************************
+
+**********************
+.put('/pedido')
+--- GRAVA PEDIDO -- GRAVA partes dO PEDIDO -- USA MERGE
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> PJLOJA : header, body
+> CodPedido : body
+
+- interna:
+> pega PJCENTRAL (direto no token)
+> valida PJLOJA nas filiais do token
+> grava Pedido com .set (merge: true)
+,  doc = PJLOJA + CodPedido
+
+- retorna:
+> erro 400 : message , { erro }
+> OK 200: somente status
+
+************************
+
+
+************************
+.delete('/pedido/:idPedido')
+---  EXCLUI PEDIDO INTEIRO 
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> PJLOJA : header, body
+> idPedido : query
+
+- interna:
+> pega PJCENTRAL (direto no token)
+> valida PJLOJA nas filiais do token
+> EXCLUI Pedido com doc = PJLOJA + idPedido
+
+- retorna:
+> erro 400 : message
+> OK 200: apenas status
+
+************************
+
+
+>>>>>>>>>>>>>>>  FIM ROTA LOJA     <<<<<<<<<<<<<<<<<<<<>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>  ROTA /configs   <<<< SIM autenticada     <<<<<<<<<<<<<<<<<<<<>>>>>>
+
+
+************************
+.get('/')
+---  COLETA O UNICO REGISTRO DA TABELA CNPJ (suas configuracoes)
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> CNPJ : header     (da loja ou central)
+
+
+- interna:
+> get campos do CNPJ cadastrado
+
+- retorna:
+> erro 400 : message , { erro }
+> OK 204 : message: 'sem dados'
+> OK 200: json do cnpj
+
+************************
+
+************************
+.put('/')
+---  GRAVA INFORMAÇÕES DO CONFIG cnpj
+// NAO CRIA TEBELA ...ELA DEVE SER CRIADA DE OUTRA FORMA
+
+-parametros necessarios:
+> x-access-token  : header   >OU<   > token  : body , query
+> CNPJ : header     (da loja ou central)
+
+
+- interna:
+> update campos enviados ... = merge
+
+- retorna:
+> erro 400 : message , { erro }
+> OK 204 : message: 'sem dados'
+> OK 200: json de algo
+
+************************
+
+
+>>>>>>>>>>>>>>>  FIM ROTA CONFIGS    <<<<<<<<<<<<<<<<<<<<>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
